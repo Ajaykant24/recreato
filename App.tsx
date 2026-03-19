@@ -1,7 +1,8 @@
 
+
 import React, { useState } from 'react';
-import Home from './components/Home';
-import Recreato from './components/Recreato';
+import { Home } from './components/Home';
+import { Recreato } from './components/RecreatoView';
 import { AppSection } from './types';
 
 const App: React.FC = () => {
@@ -24,3 +25,4 @@ const App: React.FC = () => {
 };
 
 export default App;
+
