@@ -1,0 +1,85 @@
+// ===============================================================
+// Assumed Data Model
+// ===============================================================
+//
+// This security rules file assumes the following data structures:
+//
+// Collection: projects
+// Document ID: auto-generated
+// Fields:
+//   - userId: string (required, immutable) - The UID of the owner
+//   - name: string (required, max 100 chars) - The project name
+//   - videoUrl: string (required, max 1000 chars) - The source video URL
+//   - overlayConfig: map (required) - The full configuration object
+//   - createdAt: timestamp (required, immutable) - Creation time
+//   - updatedAt: timestamp (required) - Last update time
+//
+// ===============================================================
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+    
+    function isValidProject(data) {
+      return data.keys().hasAll(['userId', 'name', 'videoUrl', 'overlayConfig', 'createdAt', 'updatedAt']) &&
+             data.userId is string &&
+             data.name is string && data.name.size() > 0 && data.name.size() <= 100 &&
+             data.videoUrl is string && data.videoUrl.size() <= 1000 &&
+             data.overlayConfig is map &&
+             data.createdAt is timestamp &&
+             data.updatedAt is timestamp;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+             (request.auth.token.email == "kantajay381@gmail.com" && request.auth.token.email_verified == true);
+    }
+
+    // ===============================================================
+    // Collection Rules
+    // ===============================================================
+
+    match /projects/{projectId} {
+      // Users can only read their own projects
+      allow read: if isDocOwner() || isAdmin();
+      
+      // Users can only create projects for themselves
+      allow create: if isAuthenticated() && 
+                      isValidProject(request.resource.data) && 
+                      isOwner(request.resource.data.userId) &&
+                      request.resource.data.createdAt == request.time &&
+                      request.resource.data.updatedAt == request.time;
+      
+      // Users can only update their own projects
+      allow update: if isDocOwner() && 
+                      isValidProject(request.resource.data) &&
+                      request.resource.data.userId == resource.data.userId &&
+                      request.resource.data.createdAt == resource.data.createdAt &&
+                      request.resource.data.updatedAt == request.time;
+      
+      // Users can only delete their own projects
+      allow delete: if isDocOwner() || isAdmin();
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "entities": {
+    "VideoProject": {
+      "title": "Video Project",
+      "description": "A saved video editing project with its configuration.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The UID of the user who owns this project."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the project."
+        },
+        "videoUrl": {
+          "type": "string",
+          "description": "The URL of the source video."
+        },
+        "overlayConfig": {
+          "type": "object",
+          "description": "The full configuration for the video overlay."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the project was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "When the project was last updated."
+        }
+      },
+      "required": ["userId", "name", "videoUrl", "overlayConfig", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "projects": {
+      "schema": "VideoProject",
+      "description": "A collection of saved video editing projects."
+    }
+  }
+}
